@@ -1,37 +1,17 @@
-<img src="https://i.imgur.com/BtdKJaL.jpeg" alt="banner">
-<h1 align="center"><img src="https://i.imgur.com/3F8GRUx.jpeg" width="22px"> ArYAN BOT</h1
+<img src="https://i.imgur.com/QqCTwrx.jpeg" alt="banner">
+<h1 align="center"><img src="./dashboard/images/logo-non-bg.png" width="22px"> 𝐁𝐀𝐘𝐉𝐈𝐃 -𝗕𝗢𝗧 - 𝐌𝐎𝐇𝐀𝐌𝐌𝐀𝐃 𝐁𝐀𝐘𝐉𝐈𝐃  𝗠𝗘𝗦𝗦𝗘𝗡𝗚𝗘𝗥 𝗖𝗛𝗔𝗧 𝗕𝗢𝗧</h1>
+<!-- Github README -->
+
+<p align="center"><img src="https://img.shields.io/badge/I Am BAYJID %20BANGLADESHI- NOOB PROGRAMMER-green?colorA=%23ff0000&colorB=%23017e40&style=flat-square">
+
+</i></b></h3>
+<h3 align="center">
+  <img src="https://emoji.discord.st/emojis/768b108d-274f-4f44-a634-8477b16efce7.gif" width="25">
+  &nbsp; ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴍʏ ᴄʜᴀᴛ ʙᴏᴛ &nbsp;
+  <img src="https://emoji.discord.st/emojis/768b108d-274f-4f44-a634-8477b16efce7.gif" width="25">
+</h3>
+<img align="center" alt="line" src="https://github.com/DalpatRathore/dalpatrathore/blob/main/assets/images/line-1.svg">
 
 
-## C3C FBstate
 
-cope Paste Chrome this link and download it 🙂
-
-```bash
-https://drive.google.com/file/d/1JccCr5N_5_QrO71LS5bp0lJ5BUA-W4oY/view?usp=drivesdk
-```
-________________
-
-## Render.com
-You need to rename 3 files if you want to run the render ❤️
-
-```bash
-1.
-config.json { delete }
-config.dev.json { right }
-
-2.
-commandconfig.json { delete }
-commandconfig.dev.json { right }
-
-3
-account.txt { delete }
-account.dev.txt { right }
-```
-
-Enjoy the running render 🙂❤️🦆
-
-**YOUTUBE**
-
-Goatbot running from youtube video
-[Vex_ArYAN](https://youtu.be/FXjDP5VWjg4?si=02AY7shzbcMqDda2).
-- 
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?color=%23F70B10&size=27&lines=𝙸+𝙰𝙼+𝙸𝙽𝙽𝙾𝙲𝙴𝙽𝚃+𝙱𝙾𝚈;+𝙸𝚃'𝚜+𝙽𝙾𝚃+𝙹𝚄𝚂𝚃+𝙰+𝙽𝙰𝙼𝙴+𝙱𝚁𝙾;𝙸𝚃'R+A+𝙱𝚁𝙰𝙽𝙳;𝚃𝙷𝙰𝙽𝙺+𝚈𝙾𝚄+𝙴𝚅𝙴𝚁𝚈𝙾𝙽𝙴;𝙻𝙾𝚅e+𝚄+𝙰𝙻𝙻+𝙵𝚁𝙸𝙴𝙽𝙳𝚂)](https://git.io/typing-svg)
