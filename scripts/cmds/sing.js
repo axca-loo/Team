@@ -1,77 +1,87 @@
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
-
 module.exports = {
-  config: {
-    name: 'sing',
-    author: 'Nyx',
-    usePrefix: false,
-    category: 'Youtube Song Downloader'
-  },
-  onStart: async ({ event,api,args, message }) => {
-    try {
-      const query = args.join(' ');
-      if (!query) return message.reply('Please provide a search query!');
-      const searchResponse = await axios.get(`https://mostakim.onrender.com/mostakim/ytSearch?search=${encodeURIComponent(query)}`);
-      api.setMessageReaction("⏳", event.messageID, () => {}, true);
-      const parseDuration = (timestamp) => {
-        const parts = timestamp.split(':').map(part => parseInt(part));
-        let seconds = 0;
-        
-        if (parts.length === 3) {
-          seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-        } else if (parts.length === 2) {
-          seconds = parts[0] * 60 + parts[1];
-        }
-        
-        return seconds;
-      };
-      const filteredVideos = searchResponse.data
-        .filter(video => {
-          try {
-            const totalSeconds = parseDuration(video.timestamp);
-            return totalSeconds < 600;
-          } catch {
-            return false;
-          }
-        });
-
-      if (filteredVideos.length === 0) {
-       message.reply('No short videos found (under 10 minutes)!');
-      }
-      const selectedVideo = filteredVideos[0];
-      const tempFilePath = path.join(__dirname, 'temp_audio.m4a');
-      const apiResponse = await axios.get(`https://mostakim.onrender.com/m/sing?url=${selectedVideo.url}`);
-      
-      if (!apiResponse.data.url) {
-        throw new Error('No audio URL found in response');
-      }
-
-      const writer = fs.createWriteStream(tempFilePath);
-      const audioResponse = await axios({
-        url: apiResponse.data.url,
-        method: 'GET',
-        responseType: 'stream'
-      });
-
-      audioResponse.data.pipe(writer);
-      
-      await new Promise((resolve, reject) => {
-        writer.on('finish', resolve);
-        writer.on('error', reject);
-      });
-api.setMessageReaction("✅", event.messageID, () => {}, true);
-      await message.reply({
-        body: `🎧 Now playing: ${selectedVideo.title}\nDuration: ${selectedVideo.timestamp}`,
-        attachment: fs.createReadStream(tempFilePath)
-      });
-      fs.unlink(tempFilePath, (err) => {
-        if (err) message.reply('Error deleting temp file:', err);
-      });
-
-    } catch (error) {
-      message.reply(`Error: ${error.message}`);
-    }
-  }
+ config: {
+ name: "sing",
+ version: "1.0",
+ role: 0,
+ author: "kshitiz",
+ cooldowns: 5,
+ shortdescription: "download music from YouTube",
+ longdescription: "",
+ category: "music",
+ usages: "{pn} music name",
+ dependencies: {
+ "fs-extra": "",
+ "request": "",
+ "axios": "",
+ "ytdl-core": "",
+ "yt-search": ""
+ }
+ },
+ 
+ onStart: async ({ api, event }) => {
+ const axios = require("axios");
+ const fs = require("fs-extra");
+ const ytdl = require("ytdl-core");
+ const request = require("request");
+ const yts = require("yt-search");
+ 
+ const input = event.body;
+ const text = input.substring(12);
+ const data = input.split(" ");
+ 
+ if (data.length < 2) {
+ return api.sendMessage("Please specify a music name.", event.threadID);
+ }
+ 
+ data.shift();
+ const musicName = data.join(" ");
+ 
+ try {
+ api.sendMessage(`✔ | Searching music for "${musicName}".\ ekxin parkhanuhos...`, event.threadID);
+ 
+ const searchResults = await yts(musicName);
+ if (!searchResults.videos.length) {
+ return api.sendMessage("kunai music vetiyena.", event.threadID, event.messageID);
+ }
+ 
+ const music = searchResults.videos[0];
+ const musicUrl = music.url;
+ 
+ const stream = ytdl(musicUrl, { filter: "audioonly" });
+ 
+ const fileName = `${event.senderID}.mp3`;
+ const filePath = __dirname + `/cache/${fileName}`;
+ 
+ stream.pipe(fs.createWriteStream(filePath));
+ 
+ stream.on('response', () => {
+ console.info('[DOWNLOADER]', 'Starting download now!');
+ });
+ 
+ stream.on('info', (info) => {
+ console.info('[DOWNLOADER]', `Downloading music: ${info.videoDetails.title}`);
+ });
+ 
+ stream.on('end', () => {
+ console.info('[DOWNLOADER] Downloaded');
+ 
+ if (fs.statSync(filePath).size > 26214400) {
+ fs.unlinkSync(filePath);
+ return api.sendMessage('❌ | The file could not be sent because it is larger than 25MB.', event.threadID);
+ }
+ 
+ const message = {
+ body: `🙆‍♀️ ❀ tapaiko geet\ ❀ Title: ${music.title}\ Duration: ${music.duration.timestamp}`,
+ attachment: fs.createReadStream(filePath)
+ };
+ 
+ api.sendMessage(message, event.threadID, () => {
+ fs.unlinkSync(filePath);
+ });
+ });
+ } catch (error) {
+ console.error('[ERROR]', error);
+ api.sendMessage('🥱 ❀ An error occurred while processing the command.', event.threadID);
+ }
+ }
 };

@@ -1,88 +1,64 @@
-const { getStreamsFromAttachment } = global.utils;
+const { getStreamsFromAttachment, checkAndTranslate } = global.utils;
 
 module.exports = {
 	config: {
 		name: "notice",
 		aliases: ["notif"],
-		version: "1.4",
-		author: "BaYjid",
+		version: "1.0",
+		author: "NTKhang",
 		countDown: 5,
 		role: 2,
-		shortDescription: "Send a premium notice to all groups",
-		longDescription: "This command allows the admin to send a stylish notice to all groups with user mentions, timestamp, and enhanced formatting.",
+		shortDescription: "Send notice from admin to all box",
+		longDescription: "Send notice from admin to all box",
 		category: "owner",
 		guide: "{pn} <message>",
 		envConfig: {
-			delayPerGroup: 300
+			delayPerGroup: 250
 		}
 	},
 
 	onStart: async function ({ message, api, event, args, commandName, envCommands }) {
 		const { delayPerGroup } = envCommands[commandName];
-
-		// Check if a message is provided
-		if (!args.length) return message.reply("⚠️ Please enter a message to send.");
-
-		// Get current timestamp
-		const timestamp = new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" });
-
-		// Mention user if replying to someone
-		const userMention = event.messageReply?.senderID 
-			? `👤 Mentioned User: [@${event.messageReply.senderID}]` 
-			: "";
-
-		// Stylish text format
-		const stylishText = `『 𝗕𝗮𝗬𝗷𝗶𝗱 - 𝗢𝗳𝗳𝗶𝗰𝗶𝗮𝗹 𝗡𝗼𝘁𝗶𝗰𝗲 』\n━━━━━━━━━━━━━━━━━━\n📅 Date & Time: ${timestamp}\n${userMention}\n\n📢 Notice:\n${args.join(" ")}\n━━━━━━━━━━━━━━━━━━\n✅ Admin Announcement - Please Take Action`;
-
-		// Create the message format
+		if (!args[0])
+			return message.reply("Please enter the message you want to send to all groups");
 		const formSend = {
-			body: stylishText,
-			attachment: await getStreamsFromAttachment([
-				...event.attachments, 
-				...(event.messageReply?.attachments || [])
-			])
-		};
+			body: `Notice from SuperAdmin\n────────────────\n${args.join(" ")}`,
+			attachment: await getStreamsFromAttachment([...event.attachments, ...(event.messageReply?.attachments || [])])
+		}
 
-		// Retrieve all group thread IDs
-		const allThreads = await api.getThreadList(1000, null, ["INBOX"]);
-		const groupThreads = allThreads.filter(thread => thread.isGroup && thread.threadID !== event.threadID);
-		const totalGroups = groupThreads.length;
 
-		// If no groups are found
-		if (totalGroups === 0) return message.reply("❌ No groups found to send the notice.");
+		const allThreadID = (await api.getThreadList(2000, null, ["INBOX"]))
+			.filter(item => item.isGroup === true && item.threadID != event.threadID)
+			.map(item => item = item.threadID);
+		message.reply(`Start sending notice from admin bot to ${allThreadID.length} Chat group`);
 
-		// Start sending messages
-		message.reply(`⏳ Sending notices to ${totalGroups} groups...`);
+		let sendSucces = 0;
+		const sendError = [];
+		const wattingSend = [];
 
-		let successCount = 0, failedGroups = [];
-		const pendingMessages = [];
-
-		// Send messages to each group
-		for (const { threadID } of groupThreads) {
+		for (const tid of allThreadID) {
 			try {
-				pendingMessages.push({ threadID, pending: api.sendMessage(formSend, threadID) });
+				wattingSend.push({
+					threadID: tid,
+					pending: api.sendMessage(formSend, tid)
+				});
 				await new Promise(resolve => setTimeout(resolve, delayPerGroup));
-			} catch (error) {
-				failedGroups.push({ id: threadID, error: error.message });
+			}
+			catch (e) {
+				sendError.push(tid);
 			}
 		}
 
-		// Process sent messages
-		for (const { threadID, pending } of pendingMessages) {
+		for (const sended of wattingSend) {
 			try {
-				await pending;
-				successCount++;
-			} catch (error) {
-				failedGroups.push({ id: threadID, error: error.message });
+				await sended.pending;
+				sendSucces++;
+			}
+			catch (e) {
+				sendError.push(sended.threadID);
 			}
 		}
 
-		// Send final report
-		const successMessage = `✅ Successfully sent notices to ${successCoun} groups.`;
-		const failureMessage = failedGroups.length > 0 
-			? `\n❌ Failed to send to **${failedGroups.length}** groups:\n${failedGroups.map(g => `• ${g.id} - ${g.error}`).join("\n")}` 
-			: "";
-
-		message.reply(successMessage + failureMessage);
+		message.reply(`✅ Sent notice to ${sendSucces} Successful group${sendError.length > 0 ? `\n❌ Error occurs when sent ${sendError.length} the group:\n${sendError.join("\n ")}` : ""}`);
 	}
 };
