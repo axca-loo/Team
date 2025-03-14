@@ -1,171 +1,72 @@
+const fs = require('fs');const moment = require('moment-timezone');
 module.exports = {
-
-  config: {
-
-    name: "botinfo",
-
-    aliases: ["info","btinfo"],
-
-    version: "1.0",
-
-    author: "BAYJID",
-
-    role: 0,
-
-    shortDescription: {
-
-      en: "Get the Bot information such as uptime, ping, and group info."
-
-    },
-
-    longDescription: {
-
-      en: "Get the Bot information such as uptime, ping, and group info."
-
-    },
-
-    category: "Info",
-
-    guide: {
-
-      en: "{pn}"
-
-    }
-
-  },
-
-  onStart: async function ({ api, event, args, usersData, threadsData }) {
-
-    try {
-
-      
-
-      // Group info
-
-      let threadInfo = await api.getThreadInfo(event.threadID);
-
-      var memLength = threadInfo.participantIDs.length;
-
-      let threadMem = threadInfo.participantIDs.length;
-
-      var nameMen = [];
-
-      var gendernam = [];
-
-      var gendernu = [];
-
-      var nope = [];
-
-      for (let z in threadInfo.userInfo) {
-
-     	var gioitinhone = threadInfo.userInfo[z].gender;
-
-     	var nName = threadInfo.userInfo[z].name;
-
-        if(gioitinhone == "MALE"){gendernam.push(z+gioitinhone)}
-
-        else if(gioitinhone == "FEMALE"){gendernu.push(gioitinhone)}
-
-            else{nope.push(nName)}
-
-      };
-
-      var nam = gendernam.length;
-
-      var nu = gendernu.length;
-
-      var listad = '';
-
-      var qtv2 = threadInfo.adminIDs;
-
-      let qtv = threadInfo.adminIDs.length;
-
-      let sl = threadInfo.messageCount;
-
-      let u = threadInfo.nicknames;
-
-      let icon = threadInfo.emoji;
-
-      let threadName = threadInfo.threadName;	
-
-      let id = threadInfo.threadID;
-
-      for (let i = 0; i < qtv2.length; i++) {
-
-      const infu = (await api.getUserInfo(qtv2[i].id));
-
-      const name = infu[qtv2[i].id].name;
-
-		listad += '•' + name + '\n';
-
-		}
-
-		   
-
-      const allUsers = await usersData.getAll();
-
-      const allThreads = await threadsData.getAll();
-
-      
-
-      // uptime
-
-      const uptime = process.uptime();
-
-      const hours = Math.floor(uptime / 3600);
-
-      const minutes = Math.floor((uptime % 3600) / 60);
-
-      const seconds = Math.floor(uptime % 60);
-
-      // ping
-
-      const timeStart = Date.now();
-
-      await api.sendMessage("𝗖𝗵𝗲𝗰𝗸𝗶𝗻𝗴 𝗕𝗼𝘁'𝘀 𝗜𝗻𝗳𝗼.", event.threadID);
-
-      const ping = Date.now() - timeStart;
-
-      
-
-      const uptimeString = `${hours}Hrs ${minutes}min ${seconds}sec`;
-
-      
-
-      api.sendMessage(`╭────────────────⭓
-├─「𝐔𝐏𝐓𝐈𝐌𝐄」
-│» 𝗕𝗼𝘁 𝗥𝘂𝗻𝗻𝗶𝗻𝗴 𝗶𝗻 
-│${uptimeString}.
-├────────────────
-├─「𝐏𝐈𝐍𝐆」
-│» 𝗧𝗵𝗲 𝗖𝘂𝗿𝗿𝗲𝗻𝘁 𝗣𝗶𝗻𝗴 𝗜𝘀:
-│${ping}ms.
-├────────────────
-├─「𝐆𝐑𝐎𝐔𝐏 𝐈𝐧𝐟𝐨」
-│» 𝗚𝗖 𝗡𝗮𝗺𝗲: 
-│${threadName}
-│» 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗: 
-│${id}
-│» 𝗡𝘂𝗺𝗯𝗲𝗿 𝗼𝗳 𝗠𝗲𝗺𝗯𝗲𝗿:
-│${threadMem}
-│» 𝗡𝘂𝗺𝗯𝗲𝗿 𝗼𝗳 𝗠𝗮𝗹𝗲:
-│${nam}
-│» 𝗡𝘂𝗺𝗯𝗲𝗿 𝗼𝗳 𝗙𝗲𝗺𝗮𝗹𝗲:
-│${nu}
-│» 𝗡𝘂𝗺𝗯𝗲𝗿 𝗼𝗳 𝗔𝗱𝗺𝗶𝗻: 
-│${qtv}
-│𝗡𝘂𝗺𝗯𝗲𝗿 𝗼𝗳 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀:
-│${sl}
-╰────────────────⭓`, event.threadID);
-
-    } catch (error) {
-
-      console.error(error);
-
-      api.sendMessage("An error occurred while retrieving data.", event.threadID);
-
-    }
-
-  }
-
+  config: {
+    name: "info",
+    aliases: ["inf", "in4"],
+    version: "2.0",
+    author: "VEX_ADNAN",
+    countDown: 5,
+    role: 0,
+    shortDescription: {
+      vi: "",
+      en: "Sends information about the bot and admin along with an image."
+    },
+    longDescription: {
+      vi: "",
+      en: "Sends information about the bot and admin along with an image."
+    },
+    category: "Information",
+    guide: {
+      en: "{pn}"
+    },
+    envConfig: {}
+  },
+
+  onStart: async function ({ message }) {
+    this.sendInfo(message);
+  },
+
+  onChat: async function ({ event, message }) {
+    if (event.body && event.body.toLowerCase() === "info") {
+      this.sendInfo(message);
+    }
+  },
+
+  sendInfo: async function (message) {
+    const botName = "-♦𝐓𝐀𝐍𝐕𝐈𝐑 𝐁𝐎𝐓♦-";
+    const botPrefix = ".";
+    const authorName = "𝐓𝐀𝐍𝐕𝐈𝐑";
+    const authorFB = "𝐭𝐚𝐧𝐯𝐢𝐫.𝐚𝐡𝐦𝐞𝐝.112";
+    const authorInsta = "𝐭𝐚𝐧𝐯𝐢_𝐫___112";
+    const status = "𝐌𝐀𝐑𝐑𝐈𝐄𝐃🍒";
+
+    const urls = JSON.parse(fs.readFileSync('scripts/cmds/assets/Ayan.json'));
+    const link = urls[Math.floor(Math.random() * urls.length)];
+
+    const now = moment().tz('Asia/Dhaka');
+    const date = now.format('MMMM Do YYYY');
+    const time = now.format('h:mm:ss A');
+
+    const uptime = process.uptime();
+    const seconds = Math.floor(uptime % 60);
+    const minutes = Math.floor((uptime / 60) % 60);
+    const hours = Math.floor((uptime / (60 * 60)) % 24);
+    const days = Math.floor(uptime / (60 * 60 * 24));
+    const uptimeString = `${hours}h ${minutes}m ${seconds}sec`;
+
+    message.reply({
+      body: `╭────────────◊
+├‣ 𝐁𝐨𝐭 & 𝐎𝐰𝐧𝐞𝐫 𝐈𝐧𝐟𝐨𝐫𝐦𝐚𝐭𝐢𝐨𝐧 
+├‣ 𝐍𝐚𝐦𝐞: ${authorName}
+├‣ 𝐁𝐨𝐭 𝐍𝐚𝐦𝐞:  ${botName}
+├‣ 𝐏𝐫𝐞𝐟𝐢𝐱:  ${botPrefix}
+├‣ 𝐅𝐛: ${authorFB}
+├‣ 𝐈𝐧𝐬𝐭𝐚𝐠𝐫𝐚𝐦:  ${authorInsta}
+├‣ 𝐑𝐞𝐥𝐚𝐭𝐢𝐨𝐧𝐬𝐡𝐢𝐩: ${status}   
+├‣ 𝐓𝐢𝐦𝐞:  ${time}
+├‣ 𝐔𝐩𝐭𝐢𝐦𝐞: ${uptimeString}
+╰────────────◊`,
+      attachment: await global.utils.getStreamFromURL(link)
+    });
+  }
 };
