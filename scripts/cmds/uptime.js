@@ -1,113 +1,123 @@
-const os = require("os");
-const fs = require("fs-extra");
-
-const startTime = new Date(); // Moved outside onStart
+const os = require('os');
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
 
 module.exports = {
-  config: {
-    name: "uptime",
-    aliases: ["up"],
-    author: "ArYAN",
-    countDown: 0,
-    role: 0,
-    category: "system",
-    longDescription: {
-      en: "Get System Information",
-    },
-  },
-  
-  onStart: async function ({ api, event, args, threadsData, usersData }) {
-    try {
-      const uptimeInSeconds = (new Date() - startTime) / 1000;
+    config: {
+        name: "uptime",
+        aliases: ["upt", "up"],
+        version: "1.0",
+        author: "Anthony  // Fixed and Edited by XOS Eren",
+        role: 0,
+        shortDescription: {
+            en: "Check system stats like uptime, memory usage, CPU load, and disk usage."
+        },
+        longDescription: {
+            en: "Provides detailed system information including uptime, memory usage, CPU model, and disk usage."
+        },
+        category: "SYSTEM",
+        guide: {
+            en: "Type {pn} to ping the server and get stats."
+        }
+    },
 
-      const seconds = uptimeInSeconds;
-      const days = Math.floor(seconds / (3600 * 24));
-      const hours = Math.floor((seconds % (3600 * 24)) / 3600);
-      const minutes = Math.floor((seconds % 3600) / 60);
-      const secondsLeft = Math.floor(seconds % 60);
-      const uptimeFormatted = `${days}d ${hours}h ${minutes}m ${secondsLeft}s`;
+    onStart: async function ({ message, event, api, usersData, threadsData }) {
+        // Calculate uptime
+        const uptime = process.uptime();
+        const s = Math.floor(uptime % 60);
+        const m = Math.floor((uptime / 60) % 60);
+        const h = Math.floor((uptime / (60 * 60)) % 24);
+        const upSt = `${h} Hours ${m} Minutes ${s} Seconds`;
 
-      const loadAverage = os.loadavg();
-      const cpuUsage =
-        os
-          .cpus()
-          .map((cpu) => cpu.times.user)
-          .reduce((acc, curr) => acc + curr) / os.cpus().length;
+        let threadInfo = await api.getThreadInfo(event.threadID);
 
-      const totalMemoryGB = os.totalmem() / 1024 ** 3;
-      const freeMemoryGB = os.freemem() / 1024 ** 3;
-      const usedMemoryGB = totalMemoryGB - freeMemoryGB;
+        const genderb = [];
+        const genderg = [];
+        const nope = [];
 
-      const allUsers = await usersData.getAll();
-      const allThreads = await threadsData.getAll();
-      const currentDate = new Date();
-      const options = { year: "numeric", month: "numeric", day: "numeric" };
-      const date = currentDate.toLocaleDateString("en-US", options);
-      const time = currentDate.toLocaleTimeString("en-US", {
-        timeZone: "Asia/Kolkata",
-        hour12: true,
-      });
+        // Loop to categorize users by gender
+        for (let z in threadInfo.userInfo) {
+            const gender = threadInfo.userInfo[z].gender;
+            const name = threadInfo.userInfo[z].name;
 
-      const timeStart = Date.now();
-      await api.sendMessage({
-        body: "🔎| checking........",
-      }, event.threadID);
+            if (gender === "MALE") {
+                genderb.push(z + gender);
+            } else if (gender === "FEMALE") {
+                genderg.push(gender);
+            } else {
+                nope.push(name);
+            }
+        }
 
-      const ping = Date.now() - timeStart;
+        const spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+        const loadingMessage = await message.reply(`${spinner[0]} Checking system stats 🔄`);
+        let currentFrame = 0;
+        const intervalId = setInterval(async () => {
+            currentFrame = (currentFrame + 1) % spinner.length;
+            await api.editMessage(`${spinner[currentFrame]} Checking system stats 🔄`, loadingMessage.messageID);
+        }, 200);
 
-      let pingStatus = "⛔| 𝖡𝖺𝖽 𝖲𝗒𝗌𝗍𝖾𝗆";
-      if (ping < 1000) {
-        pingStatus = "✅| 𝖲𝗆𝗈𝗈𝗍𝗁 𝖲𝗒𝗌𝗍𝖾𝗆";
-      }
-      const systemInfo = `♡   ∩_∩
- （„• ֊ •„)♡
-╭─∪∪────────────⟡
-│ 𝗨𝗣𝗧𝗜𝗠𝗘 𝗜𝗡𝗙𝗢
-├───────────────⟡
-│ ⏰ 𝗥𝗨𝗡𝗧𝗜𝗠𝗘
-│  ${uptimeFormatted}
-├───────────────⟡
-│ 👑 𝗦𝗬𝗦𝗧𝗘𝗠 𝗜𝗡𝗙𝗢
-│𝙾𝚂: ${os.type()} ${os.arch()}
-│𝙻𝙰𝙽𝙶 𝚅𝙴𝚁: ${process.version}
-│𝙲𝙿𝚄 𝙼𝙾𝙳𝙴𝙻: ${os.cpus()[0].model}
-│𝚂𝚃𝙾𝚁𝙰𝙶𝙴: ${usedMemoryGB.toFixed(2)} GB / ${totalMemoryGB.toFixed(2)} GB
-│𝙲𝙿𝚄 𝚄𝚂𝙰𝙶𝙴: ${cpuUsage.toFixed(1)}%
-│𝚁𝙰𝙼 𝚄𝚂𝙶𝙴: ${process.memoryUsage().heapUsed / 1024 / 1024} MB;
-├───────────────⟡
-│ ✅ 𝗢𝗧𝗛𝗘𝗥 𝗜𝗡𝗙𝗢
-│𝙳𝙰𝚃𝙴: ${date}
-│𝚃𝙸𝙼𝙴: ${time}
-│𝚄𝚂𝙴𝚁𝚂: ${allUsers.length}
-│𝚃𝙷𝚁𝙴𝙰𝙳𝚂: ${allThreads.length}
-│𝙿𝙸𝙽𝙶: ${ping}𝚖𝚜
-│𝚂𝚃𝙰𝚃𝚄𝚂: ${pingStatus}
-╰───────────────⟡
+        // Collecting system information
+        const b = genderb.length;
+        const g = genderg.length;
+        const u = await usersData.getAll();
+        const t = await threadsData.getAll();
+        const totalMemory = os.totalmem();
+        const freeMemory = os.freemem();
+        const usedMemory = totalMemory - freeMemory;
+        const diskUsage = await getDiskUsage();
+        const system = `${os.platform()} ${os.release()}`;
+        const model = `${os.cpus()[0].model}`;
+        const cores = `${os.cpus().length}`;
+        const arch = `${os.arch()}`;
+        const processMemory = prettyBytes(process.memoryUsage().rss);
+
+        // Prepare the body content
+        const body = `
+────────────────────
+          𝗨𝗣𝗧𝗜𝗠𝗘 𝗥𝗘𝗦𝗣𝗢𝗡𝗦𝗘 
+           🎀 𝗔𝗱𝗺𝗶𝗻 𝗜𝗻𝗳𝗼 ☮
+        _____________________
+      
+├‣𝗢𝗪𝗡𝗘𝗥: 𝗞𝗔𝗠𝗨 ✨
+├‣𝗣𝗥𝗘𝗙𝗜𝗫: ( ${global.GoatBot.config.prefix} )
+
+          🎀 𝗕𝗼𝗧 𝗥𝘂𝗻 𝗧𝗶𝗺𝗲 ☮
+        _____________________
+
+├‣𝗛𝗼𝘂𝗿𝘀: ${h} 
+├‣𝗠𝗶𝗻𝘂𝘁𝗲𝘀: ${m} 
+├‣𝗦𝗲𝗰𝗼𝗻𝗱𝘀: ${s}
+
+        🎀 𝗢𝘁𝗵𝗲𝗿'𝘀 𝗜𝗻𝗳𝗼 ☮
+════════════════
+├‣🙆‍♀️ 𝗚𝗶𝗿𝗹𝘀: ${g}
+├‣🙋‍♂️ 𝗕𝗼𝘆𝘀: ${b}
+├‣🖥️ 𝗖𝗣𝗨 𝗠𝗼𝗱𝗲𝗹: ${model}
+├‣🤖 𝗨𝘀𝗲𝗿: ${u.length}
+════════════════
 `;
 
-      api.sendMessage(
-        {
-          body: systemInfo,
-        },
-        event.threadID,
-        (err, messageInfo) => {
-          if (err) {
-            console.error("Error sending message with attachment:", err);
-          } else {
-            console.log(
-              "Message with attachment sent successfully:",
-              messageInfo,
-            );
-          }
-        },
-      );
-    } catch (error) {
-      console.error("Error retrieving system information:", error);
-      api.sendMessage(
-        "Unable to retrieve system information.",
-        event.threadID,
-        event.messageID,
-      );
-    }
-  },
+        // Send the final message
+        await api.editMessage(body, loadingMessage.messageID);
+        clearInterval(intervalId);
+    }
 };
+
+// Function to get disk usage
+async function getDiskUsage() {
+    const { stdout } = await exec('df -k /');
+    const [_, total, used] = stdout.split('\n')[1].split(/\s+/).filter(Boolean);
+    return { total: parseInt(total) * 1024, used: parseInt(used) * 1024 };
+}
+
+// Function to convert bytes into human-readable format
+function prettyBytes(bytes) {
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let i = 0;
+    while (bytes >= 1024 && i < units.length - 1) {
+        bytes /= 1024;
+        i++;
+    }
+    return `${bytes.toFixed(2)} ${units[i]}`;
+}
